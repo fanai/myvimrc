@@ -1,0 +1,216 @@
+"----------------------------"
+"----------Vundle------------"
+"----------------------------"
+set nocompatible"不完全兼容vi"
+filetype off
+
+" set the runtime path to include Vundle and initialize
+set rtp+=~/.vim/bundle/Vundle.vim
+call vundle#rc()
+
+" Let Vundle manage itself
+Plugin 'VundleVim/Vundle.vim'
+Plugin 'Valloric/YouCompleteMe'
+Plugin 'ctrlpvim/ctrlp.vim'
+Plugin 'scrooloose/syntastic'
+call vundle#end()
+filetype plugin indent on
+
+"----------------------------"
+"--------YouCompleteMe-------"
+"----------------------------"
+let g:ycm_global_ycm_extra_conf='~/.vim/bundle/YouCompleteMe/cpp/ycm/.ycm_extra_conf.py'
+let g:ycm_collect_identifiers_from_tag_files=1
+
+let g:ycm_error_symbol = '>>'
+let g:ycm_warning_symbol = '>*'
+nnoremap <leader>gl :YcmCompleter GoToDeclaration<CR>
+nnoremap <leader>gf :YcmCompleter GoToDefinition<CR>
+nnoremap <leader>gg :YcmCompleter GoToDefinitionElseDeclaration<CR>
+nmap <F3> :YcmDiags<CR>
+
+let g:auto_save = 1
+
+"----------------------------"
+"--------   NERDTree  -------"
+"----------------------------"
+"set shortcut key
+"map <F4> :NERDTreeMirror<CR>
+"map <F4> :NERDTreeToggle<CR>
+
+"----------------------------"
+"--------    CtrlP    -------"
+"----------------------------"
+let g:ctrlp_map = ',,'
+let g:ctrlp_open_multiple_files = 'v'
+
+set wildignore+=*/tmp/*,*.so,*.swp,*.zip
+let g:ctrlp_custom_ignore = {
+  \ 'dir':  '\v[\/]\.(git)$',
+  \ 'file': '\v\.(log|jpg|png|jpeg)$',
+  \ }
+
+"----------------------------"
+"--------  pathogen   -------"
+"----------------------------"
+"execute pathogen#infect()
+
+"----------------------------"
+"--------  Syntastic  -------"
+"----------------------------"
+set statusline+=%#warningmsg#
+set statusline+=%{SyntasticStatuslineFlag()}
+set statusline+=%*
+let g:syntastic_always_populate_loc_list = 1
+let g:syntastic_auto_loc_list = 1
+let g:syntastic_check_on_open = 1
+let g:syntastic_check_on_wq = 0
+
+"----------------------------"
+"--------Global Config-------"
+"----------------------------"
+syntax enable
+set background=dark
+colorscheme molokai
+
+set number
+set dictionary +=/usr/include
+"colorscheme darkblue
+set noswapfile
+set nobackup
+set mouse=a
+
+filetype on
+
+set history=1000
+"设置当前行显示样式"
+set cursorline
+"hi CursorLine cterm = NONE ctermbg = white
+"hi CursorColumn cterm = NONE ctermbg = white
+
+set autoindent
+set cindent
+set cinoptions={0,1s,t0,n-2,p2s,(03s,=,5s,>1s,=1s,:1s
+if &term=="xterm"
+	set t_Co=256;
+	set t_Sb=^[[4%dm
+	set t_Sf=^[[3%dm
+endif
+set smartindent
+
+"set expandtab " space grid replace tab
+set backspace=2
+set tabstop=4
+set shiftwidth=4
+set softtabstop=4
+
+set linebreak
+set showmatch
+
+set fileencodings=utf-8,gb2312,gbk,gb18030
+set termencoding=utf-8
+"set fileformats=unix
+"set encoding=prc
+set encoding=utf-8
+
+set hlsearch"搜索高亮"
+set incsearch
+set helplang=cn "帮助系统设置为中文"
+"状态栏设置"
+set laststatus=2
+set statusline=%<%f\ %h%m%r%=%k[%{(&fenc==\"\")?&enc:&fenc}%{(&bomb?\",BOM\":\"\")}]\ %-14.(%l,%c%V%)\ %P
+set ruler
+
+"no \n
+set nowrap
+
+"按F4自动生成C/C++配置信息
+map <F4> :call CTitleDet()<cr>
+function AddCTitle()
+	call append(0,'/******************************************************')
+	call append(1,'# Author       : fanai')
+	call append(2,'# Last modified: '.strftime('%Y-%m-%d %H:%M:%S'))
+	call append(3,'# Email        : zengjinping@antiy.cn')
+	call append(4,'# Filename     : '.expand('%:t'))
+	call append(5,'# Description  : ')
+	call append(6,'******************************************************/')
+	echohl WarningMsg | echo 'Successful in adding copyright.' | echohl None
+endf
+	 
+"按F5自动生成Python配置信息
+map <F5> :call PTitleDet()<cr>
+function AddPTitle()
+	call append(0,'#******************************************************')
+	call append(1,'# Author       : fanai')
+	call append(2,'# Last modified: '.strftime('%Y-%m-%d %H:%M:%S'))
+	call append(3,'# Email        : zengjinping@antiy.cn')
+	call append(4,'# Filename     : '.expand('%:t'))
+	call append(5,'# Description  : ')
+	call append(6,'#******************************************************')
+	echohl WarningMsg | echo 'Successful in adding copyright.' | echohl None
+endf
+
+function UpdateTitle()
+	normal m'
+	execute '/# Last modified/s@:.*$@=strftime(':	%Y-%m-%d %H:%M')@'
+	normal ''
+	normal mk
+	execute '/# Filename/s@:.*$@=':	'.expand('%:t')@'
+	execute 'noh'
+	normal 'k
+	echohl WarningMsg | echo 'Successful in updating the copyright.' | echohl None
+endfunction
+
+function CTitleDet()
+	let n=1
+	while n < 10
+		let line = getline(n)
+		if line =~ '^#s*S*LastsmodifiedS*.*$'
+			call UpdateTitle()
+			return
+		endif
+		let n = n + 1
+	endwhile
+	call AddCTitle()
+endfunction
+
+function PTitleDet()
+	let n=1
+	while n < 10
+		let line = getline(n)
+		if line =~ '^#s*S*LastsmodifiedS*.*$'
+			call UpdateTitle()
+			return
+		endif
+		let n = n + 1
+	endwhile
+	call AddPTitle()
+endfunction
+
+"自动生成C++头文件
+autocmd BufNewFile *.h,*.hpp,*.cpp,*.cc exec ":call Headfile_C()"
+
+function Headfile_C()
+	call append(0, "#include <iostream>")
+	call append(1,"using std::cout;")
+	call append(2,"using std::endl;")
+	call append(3,"using std::cin;")
+endf
+
+autocmd BufNewFile *.[ch] exec ":call Headfile_c()"
+
+function Headfile_c()
+	call append(0, "#include <stdio.h>")
+	call append(1,"")
+endf
+
+
+"自动生成python注释文件
+autocmd BufNewFile *.py exec ":call Pythonnote()"
+
+function Pythonnote()
+	call append(0, "# !/usr/bin/env python")
+	call append(1, "# -*- coding: utf-8 -*-")
+	call append(2, "# ")
+	call append(3, "")
+endf
